@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1f3a5f">
+<title>Winter Arc Tracker</title>
+<style>
+:root{--bg:#f2f8fd;--card:#fff;--ink:#1a2b3f;--mut:#6b7c90;--navy:#1f3a5f;--line:#d5e2ef;--ok:#2e9e4f;--okbg:#d6f2df;--no:#d9363e;--nobg:#fde0e2;--acc:#2f7fc1;--grey:#c5ccd4;--inp:#fff9db;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a28;--card:#182739;--ink:#e6eef7;--mut:#8fa3b8;--line:#2a3e55;--okbg:#17402a;--nobg:#4a1e23;--grey:#3b4a5c;--inp:#22344a;--acc:#5fb0ee}}
+:root[data-theme="dark"]{--bg:#0f1a28;--card:#182739;--ink:#e6eef7;--mut:#8fa3b8;--line:#2a3e55;--okbg:#17402a;--nobg:#4a1e23;--grey:#3b4a5c;--inp:#22344a;--acc:#5fb0ee}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding-bottom:84px;-webkit-tap-highlight-color:transparent}
+header{background:var(--navy);color:#fff;padding:14px 16px;text-align:center}
+header h1{margin:0;font-size:19px;letter-spacing:.3px}header small{opacity:.8;font-size:12px}
+main{max-width:560px;margin:0 auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{margin:0 0 10px;font-size:15px;color:var(--acc)}
+.mo{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mo b{font-size:17px}.mo button{width:42px;height:38px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font-size:18px}
+.days{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:thin}
+.days button{flex:0 0 auto;min-width:40px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;position:relative}
+.days button.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+.days button.today{outline:2px solid var(--acc)}
+.days button i{position:absolute;bottom:3px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--ok)}
+.hb{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--line)}
+.hb:first-of-type{border-top:0}.hb span{flex:1;font-size:15px}
+.hb button{width:50px;height:44px;border-radius:10px;border:2px solid var(--line);background:transparent;color:var(--mut);font-size:20px;font-weight:700}
+.hb button.y.on{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
+.hb button.n.on{background:var(--nobg);border-color:var(--no);color:var(--no)}
+input[type=text],input[type=number],textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--inp);color:var(--ink);font:inherit;font-size:16px}
+textarea{min-height:76px;resize:vertical}label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+.sleep{display:flex;align-items:center;gap:10px}.sleep input{max-width:120px}
+.big{font-size:26px;font-weight:700;color:var(--ok)}
+.pie{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+.pie svg{width:170px;height:170px}.lg div{display:flex;align-items:center;gap:8px;font-size:14px;margin:6px 0}
+.lg i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.bar{margin:9px 0}.bar div:first-child{display:flex;justify-content:space-between;font-size:13px}
+.bar .t{height:9px;background:var(--grey);border-radius:6px;overflow:hidden;margin-top:4px}.bar .f{height:100%;background:var(--ok)}
+.chart{width:100%;height:auto}.chart text{fill:var(--mut);font-size:9px}
+.btn{width:100%;padding:13px;border-radius:12px;border:1px solid var(--no);background:transparent;color:var(--no);font-size:15px;font-weight:600;margin-top:8px}
+.muted{color:var(--mut);font-size:13px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;padding:9px 0 8px;border:0;background:none;color:var(--mut);font-size:11px}
+nav button span{display:block;font-size:20px}nav button.on{color:var(--acc);font-weight:700}
+</style></head>
+<body>
+<header><h1>❄ Winter Arc Tracker ❄</h1><small id="sub"></small></header>
+<main id="app"></main>
+<nav><button data-a="tab" data-v="track"><span>✅</span>Track</button><button data-a="tab" data-v="charts"><span>📊</span>Charts</button><button data-a="tab" data-v="setup"><span>⚙️</span>Setup</button></nav>
+<script>
+const K='wat_v1', MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+let S=null;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+S=S||{name:'',target:8,habits:['Wake up early','Workout / walk','Drink 3L water','Read 10 pages','Practice a skill (30 min)','Healthy meals','No junk food','Journal / plan tomorrow','Screen-time limit','In bed on time'],months:{}};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const now=new Date();let ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'),day=now.getDate(),tab='track',armed=false;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const M=()=>S.months[ym]||(S.months[ym]={marks:{},sleep:{},notes:{goal:'',ach:'',imp:''}});
+const dim=()=>{const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate()};
+const isNow=()=>ym===now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+const monthTitle=()=>{const[y,m]=ym.split('-').map(Number);return MN[m-1]+' '+y};
+function stats(){const m=M(),n=dim();let done=0,miss=0,rows=[];
+ S.habits.forEach((h,i)=>{if(!h.trim())return;let d=0,x=0;for(let k=1;k<=n;k++){const v=(m.marks[i]||{})[k];if(v==1)d++;else if(v==2)x++}done+=d;miss+=x;rows.push({h,d,x})});
+ const tot=rows.length*n;return{done,miss,pend:tot-done-miss,tot,rows,n}}
+function mnav(){return `<div class="mo"><button data-a="mo" data-v="-1">‹</button><b>${monthTitle()}</b><button data-a="mo" data-v="1">›</button></div>`}
+function pie(s){const parts=[[s.done,'var(--ok)'],[s.miss,'var(--no)'],[s.pend,'var(--grey)']];let a=-Math.PI/2,o='';
+ parts.forEach(([v,c])=>{if(!v||!s.tot)return;const f=v/s.tot;if(f>=.9999){o+=`<circle cx="100" cy="100" r="90" fill="${c}"/>`;return}
+ const b=a+f*2*Math.PI,x1=100+90*Math.cos(a),y1=100+90*Math.sin(a),x2=100+90*Math.cos(b),y2=100+90*Math.sin(b);
+ o+=`<path d="M100 100L${x1} ${y1}A90 90 0 ${f>.5?1:0} 1 ${x2} ${y2}Z" fill="${c}"/>`;a=b});
+ return `<svg viewBox="0 0 200 200">${o}<circle cx="100" cy="100" r="46" fill="var(--card)"/></svg>`}
+function line(){const n=dim(),sl=M().sleep,L=26,R=8,T=8,B=22,W=340,H=190,w=W-L-R,h=H-T-B,lo=3,hi=11;
+ const X=d=>L+(n>1?(d-1)/(n-1):0)*w,Y=v=>T+(1-(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo))*h;let o='';
+ for(let v=lo;v<=hi;v++)o+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-5}" y="${Y(v)+3}" text-anchor="end">${v}</text>`;
+ for(let d=1;d<=n;d++)if(d==1||d%5==0)o+=`<text x="${X(d)}" y="${H-7}" text-anchor="middle">${d}</text>`;
+ o+=`<line x1="${L}" x2="${W-R}" y1="${Y(S.target)}" y2="${Y(S.target)}" stroke="var(--no)" stroke-dasharray="5 4" stroke-width="1.5"/>`;
+ let seg=[],segs=[];for(let d=1;d<=n;d++){if(sl[d]!=null)seg.push(d);else if(seg.length){segs.push(seg);seg=[]}}if(seg.length)segs.push(seg);
+ segs.forEach(s=>{if(s.length>1)o+=`<polyline fill="none" stroke="var(--acc)" stroke-width="2.5" points="${s.map(d=>X(d)+','+Y(sl[d])).join(' ')}"/>`});
+ for(let d=1;d<=n;d++)if(sl[d]!=null)o+=`<circle cx="${X(d)}" cy="${Y(sl[d])}" r="3.5" fill="var(--acc)"/>`;
+ return `<svg class="chart" viewBox="0 0 ${W} ${H}">${o}</svg>`}
+function render(){const m=M(),n=dim();if(day>n)day=n;let h='';
+ $('#sub').textContent=S.name?('Hi '+S.name):'Build the habit. Track the streak.';
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===tab));
+ if(tab==='track'){
+  h+=mnav()+'<div class="days">';
+  for(let d=1;d<=n;d++){const any=S.habits.some((_,i)=>(m.marks[i]||{})[d])||m.sleep[d]!=null;
+   h+=`<button data-a="day" data-v="${d}" class="${d===day?'sel':''} ${isNow()&&d===now.getDate()?'today':''}">${d}${any?'<i></i>':''}</button>`}
+  h+='</div>';let dn=0,cnt=0;
+  let rows='';S.habits.forEach((x,i)=>{if(!x.trim())return;cnt++;const v=(m.marks[i]||{})[day];if(v==1)dn++;
+   rows+=`<div class="hb"><span>${esc(x)}</span><button class="y ${v==1?'on':''}" data-a="mark" data-h="${i}" data-v="1">✔</button><button class="n ${v==2?'on':''}" data-a="mark" data-h="${i}" data-v="2">✘</button></div>`});
+  h+=`<div class="card"><h2>Day ${day} · ${dn}/${cnt} done</h2>${rows||'<p class="muted">Add habits in Setup.</p>'}</div>`;
+  h+=`<div class="card"><h2>😴 Sleep on day ${day}</h2><div class="sleep"><input type="number" inputmode="decimal" step="0.5" min="0" max="24" data-i="sleep" value="${m.sleep[day]??''}" placeholder="hours"><span class="muted">hours (target ${S.target})</span></div></div>`;
+ }
+ if(tab==='charts'){const s=stats(),p=t=>s.tot?Math.round(t/s.tot*100):0;
+  const sl=Object.values(m.sleep),avg=sl.length?(sl.reduce((a,b)=>a+b,0)/sl.length).toFixed(1):'–';
+  h+=mnav()+`<div class="card"><h2>Habit completion</h2><div class="pie">${pie(s)}<div class="lg">
+  <div><i style="background:var(--ok)"></i>Done ✔ <b>${p(s.done)}%</b></div><div><i style="background:var(--no)"></i>Missed ✘ <b>${p(s.miss)}%</b></div><div><i style="background:var(--grey)"></i>Not filled yet <b>${p(s.pend)}%</b></div></div></div>
+  <p class="muted" style="text-align:center;margin:8px 0 0">Filled so far: ${p(s.done+s.miss)}% of ${s.tot} boxes</p></div>`;
+  h+=`<div class="card"><h2>Per habit</h2>${s.rows.map(r=>`<div class="bar"><div><span>${esc(r.h)}</span><b>${Math.round(r.d/s.n*100)}%</b></div><div class="t"><div class="f" style="width:${r.d/s.n*100}%"></div></div></div>`).join('')||'<p class="muted">No habits yet.</p>'}</div>`;
+  h+=`<div class="card"><h2>Sleep schedule (hours)</h2>${line()}<p class="muted">Average: <b>${avg}</b> hrs · ${sl.length} nights logged · dashed line = target ${S.target} hrs</p></div>`;
+ }
+ if(tab==='setup'){
+  h+=`<div class="card"><h2>You</h2><label>Name</label><input type="text" data-i="name" value="${esc(S.name)}" placeholder="Your name"><label>Sleep target (hours)</label><input type="number" inputmode="decimal" step="0.5" data-i="target" value="${S.target}"></div>`;
+  h+=`<div class="card"><h2>Habits (up to 10)</h2>${S.habits.map((x,i)=>`<label>Habit ${i+1}</label><input type="text" data-i="habit" data-h="${i}" value="${esc(x)}" placeholder="(empty = not used)">`).join('')}</div>`;
+  h+=`<div class="card"><h2>Notes for ${monthTitle()}</h2><label>My monthly goal</label><textarea data-i="note" data-k="goal">${esc(m.notes.goal)}</textarea><label>What I have achieved this month</label><textarea data-i="note" data-k="ach">${esc(m.notes.ach)}</textarea><label>What should I improve</label><textarea data-i="note" data-k="imp">${esc(m.notes.imp)}</textarea></div>`;
+  h+=`<div class="card"><p class="muted">Your data is saved on this phone, in this browser.</p><button class="btn" data-a="clr">${armed?'Tap again to confirm — clear '+monthTitle():'Clear this month\'s data'}</button></div>`;
+ }
+ $('#app').innerHTML=h}
+const $=s=>document.querySelector(s);
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
+ if(a!=='clr')armed=false;
+ if(a==='tab'){tab=v;window.scrollTo(0,0)}
+ else if(a==='day')day=+v;
+ else if(a==='mo'){const[y,m]=ym.split('-').map(Number),d=new Date(y,m-1+ +v,1);ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');day=isNow()?now.getDate():1}
+ else if(a==='mark'){const mk=M().marks,i=b.dataset.h;mk[i]=mk[i]||{};if(mk[i][day]==v)delete mk[i][day];else mk[i][day]=+v;save()}
+ else if(a==='clr'){if(!armed){armed=true}else{delete S.months[ym];armed=false;save()}}
+ render()});
+document.addEventListener('input',e=>{const t=e.target,k=t.dataset.i;if(!k)return;
+ if(k==='name')S.name=t.value;
+ else if(k==='target')S.target=parseFloat(t.value)||8;
+ else if(k==='habit')S.habits[+t.dataset.h]=t.value;
+ else if(k==='note')M().notes[t.dataset.k]=t.value;
+ else if(k==='sleep'){const v=parseFloat(t.value);if(isNaN(v))delete M().sleep[day];else M().sleep[day]=Math.min(24,Math.max(0,v))}
+ save()});
+render();
+</script></body></html>

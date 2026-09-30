@@ -50,12 +50,12 @@ textarea{min-height:76px;resize:vertical}label{display:block;font-size:13px;colo
 .tgl{width:100%;padding:13px;border-radius:12px;border:2px solid var(--acc);background:transparent;color:var(--acc);font-size:15px;font-weight:700}.tgl.on{background:var(--acc);color:#fff}.hrow input{min-width:0}.hrow input.ht{flex:0 0 112px;padding:8px 4px}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav button{flex:1;padding:9px 0 8px;border:0;background:none;color:var(--mut);font-size:11px}
-nav button span{display:block;font-size:20px}nav button.on{color:var(--acc);font-weight:700}
+nav button .ic{position:relative;display:flex;align-items:center;justify-content:center;width:58px;height:30px;margin:0 auto 3px}nav button .ic::before{content:'';position:absolute;inset:0;border-radius:15px;background:var(--acc);opacity:0;transition:opacity .2s}nav button.on .ic::before{opacity:.18}nav button .ic svg{position:relative}nav button{letter-spacing:.2px}nav button.on{color:var(--acc);font-weight:700}
 </style></head>
 <body>
 <header><h1>❄ Winter Arc Tracker ❄</h1><small id="sub"></small></header>
 <main id="app"></main>
-<nav><button data-a="tab" data-v="track"><span>✅</span>Dashboard</button><button data-a="tab" data-v="charts"><span>📊</span>Progress</button><button data-a="tab" data-v="setup"><span>⚙️</span>Settings</button></nav>
+<nav><button data-a="tab" data-v="track"><i class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1.5"/><rect width="7" height="5" x="14" y="3" rx="1.5"/><rect width="7" height="9" x="14" y="12" rx="1.5"/><rect width="7" height="5" x="3" y="16" rx="1.5"/></svg></i>Dashboard</button><button data-a="tab" data-v="charts"><i class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg></i>Progress</button><button data-a="tab" data-v="setup"><i class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg></i>Settings</button></nav>
 <script>
 const K='wat_v1', MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 let S=null;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}

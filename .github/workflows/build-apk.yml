@@ -16,6 +16,8 @@ jobs:
           java-version: 17
       - run: npm install
       - run: npx cap add android
+      - run: mkdir -p assets && cp icon-only.png icon-foreground.png assets/
+      - run: npx @capacitor/assets generate --android --iconBackgroundColor '#1f3a5f' --iconBackgroundColorDark '#1f3a5f'
       - run: npx cap sync android
       - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4

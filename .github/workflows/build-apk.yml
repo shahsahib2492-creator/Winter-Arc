@@ -17,7 +17,13 @@ jobs:
       - run: npm install
       - run: npx cap add android
       - run: mkdir -p assets && cp icon-only.png icon-foreground.png assets/
-      - run: npx @capacitor/assets generate --android --iconBackgroundColor '#1f3a5f' --iconBackgroundColorDark '#1f3a5f'
+      - run: |
+          python3 -c "
+          import zlib,struct
+          w=h=1024;raw=b''.join(b'\x00'+bytes([31,58,95])*w for _ in range(h))
+          def ch(t,d):c=struct.pack('>I',len(d))+t+d;return c+struct.pack('>I',zlib.crc32(t+d)&0xffffffff)
+          open('assets/icon-background.png','wb').write(b'\x89PNG\r\n\x1a\n'+ch(b'IHDR',struct.pack('>IIBBBBB',w,h,8,2,0,0,0))+ch(b'IDAT',zlib.compress(raw))+ch(b'IEND',b''))"
+      - run: npx @capacitor/assets generate --android
       - run: npx cap sync android
       - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4

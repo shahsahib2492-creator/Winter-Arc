@@ -41,6 +41,8 @@ textarea{min-height:76px;resize:vertical}label{display:block;font-size:13px;colo
 .chart{width:100%;height:auto}.chart text{fill:var(--mut);font-size:9px}
 .btn{width:100%;padding:13px;border-radius:12px;border:1px solid var(--no);background:transparent;color:var(--no);font-size:15px;font-weight:600;margin-top:8px}
 .muted{color:var(--mut);font-size:13px}
+.hrow{display:flex;gap:8px;margin-bottom:8px}.hrow input{flex:1}.rm{width:56px;border:1px solid var(--no);background:transparent;color:var(--no);border-radius:10px;font-size:14px}.add{width:100%;padding:12px;border-radius:12px;border:1px dashed var(--acc);background:transparent;color:var(--acc);font-size:15px;font-weight:600}.foot{text-align:center;color:var(--mut);font-size:12px;margin:6px 0 10px;letter-spacing:.5px}
+.submit{width:100%;padding:16px;border:0;border-radius:14px;background:var(--ok);color:#fff;font-size:17px;font-weight:700;margin-bottom:6px}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav button{flex:1;padding:9px 0 8px;border:0;background:none;color:var(--mut);font-size:11px}
 nav button span{display:block;font-size:20px}nav button.on{color:var(--acc);font-weight:700}
@@ -48,28 +50,31 @@ nav button span{display:block;font-size:20px}nav button.on{color:var(--acc);font
 <body>
 <header><h1>❄ Winter Arc Tracker ❄</h1><small id="sub"></small></header>
 <main id="app"></main>
-<nav><button data-a="tab" data-v="track"><span>✅</span>Track</button><button data-a="tab" data-v="charts"><span>📊</span>Charts</button><button data-a="tab" data-v="setup"><span>⚙️</span>Setup</button></nav>
+<nav><button data-a="tab" data-v="track"><span>✅</span>Dashboard</button><button data-a="tab" data-v="charts"><span>📊</span>Progress</button><button data-a="tab" data-v="setup"><span>⚙️</span>Settings</button></nav>
 <script>
 const K='wat_v1', MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 let S=null;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
 S=S||{name:'',target:8,habits:['Wake up early','Workout / walk','Drink 3L water','Read 10 pages','Practice a skill (30 min)','Healthy meals','No junk food','Journal / plan tomorrow','Screen-time limit','In bed on time'],months:{}};
+if(S.habits.length&&typeof S.habits[0]==='string'){S.habits=S.habits.map((n,i)=>({id:'h'+i,name:n}));Object.values(S.months).forEach(m=>{const nm={};Object.keys(m.marks).forEach(k=>{nm['h'+k]=m.marks[k]});m.marks=nm})}
+const uid=()=>'h'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);let armRm=null;
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const now=new Date();let ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'),day=now.getDate(),tab='track',armed=false;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const M=()=>S.months[ym]||(S.months[ym]={marks:{},sleep:{},notes:{goal:'',ach:'',imp:''}});
+const M=()=>{const m=S.months[ym]||(S.months[ym]={marks:{},sleep:{},notes:{goal:'',ach:'',imp:''}});m.sub=m.sub||{};return m};
+const subSleep=()=>{const m=M(),o={};for(const k in m.sleep)if(m.sub[k])o[k]=m.sleep[k];return o};
 const dim=()=>{const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate()};
 const isNow=()=>ym===now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
 const monthTitle=()=>{const[y,m]=ym.split('-').map(Number);return MN[m-1]+' '+y};
-function stats(){const m=M(),n=dim();let done=0,miss=0,rows=[];
- S.habits.forEach((h,i)=>{if(!h.trim())return;let d=0,x=0;for(let k=1;k<=n;k++){const v=(m.marks[i]||{})[k];if(v==1)d++;else if(v==2)x++}done+=d;miss+=x;rows.push({h,d,x})});
- const tot=rows.length*n;return{done,miss,pend:tot-done-miss,tot,rows,n}}
+function stats(){const m=M(),n=dim();let done=0,miss=0,rows=[];const sd=Object.keys(m.sub).filter(k=>m.sub[k]&&+k<=n).length;
+ S.habits.forEach(hb=>{if(!hb.name.trim())return;const h=hb.name;let d=0,x=0;for(let k=1;k<=n;k++){if(!m.sub[k])continue;const v=(m.marks[hb.id]||{})[k];if(v==1)d++;else x++}done+=d;miss+=x;rows.push({h,d,x})});
+ const tot=rows.length*n;return{done,miss,pend:tot-done-miss,tot,rows,n,sd}}
 function mnav(){return `<div class="mo"><button data-a="mo" data-v="-1">‹</button><b>${monthTitle()}</b><button data-a="mo" data-v="1">›</button></div>`}
 function pie(s){const parts=[[s.done,'var(--ok)'],[s.miss,'var(--no)'],[s.pend,'var(--grey)']];let a=-Math.PI/2,o='';
  parts.forEach(([v,c])=>{if(!v||!s.tot)return;const f=v/s.tot;if(f>=.9999){o+=`<circle cx="100" cy="100" r="90" fill="${c}"/>`;return}
  const b=a+f*2*Math.PI,x1=100+90*Math.cos(a),y1=100+90*Math.sin(a),x2=100+90*Math.cos(b),y2=100+90*Math.sin(b);
  o+=`<path d="M100 100L${x1} ${y1}A90 90 0 ${f>.5?1:0} 1 ${x2} ${y2}Z" fill="${c}"/>`;a=b});
  return `<svg viewBox="0 0 200 200">${o}<circle cx="100" cy="100" r="46" fill="var(--card)"/></svg>`}
-function line(){const n=dim(),sl=M().sleep,L=26,R=8,T=8,B=22,W=340,H=190,w=W-L-R,h=H-T-B,lo=3,hi=11;
+function line(){const n=dim(),sl=subSleep(),L=26,R=8,T=8,B=22,W=340,H=190,w=W-L-R,h=H-T-B,lo=3,hi=11;
  const X=d=>L+(n>1?(d-1)/(n-1):0)*w,Y=v=>T+(1-(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo))*h;let o='';
  for(let v=lo;v<=hi;v++)o+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-5}" y="${Y(v)+3}" text-anchor="end">${v}</text>`;
  for(let d=1;d<=n;d++)if(d==1||d%5==0)o+=`<text x="${X(d)}" y="${H-7}" text-anchor="middle">${d}</text>`;
@@ -83,42 +88,46 @@ function render(){const m=M(),n=dim();if(day>n)day=n;let h='';
  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===tab));
  if(tab==='track'){
   h+=mnav()+'<div class="days">';
-  for(let d=1;d<=n;d++){const any=S.habits.some((_,i)=>(m.marks[i]||{})[d])||m.sleep[d]!=null;
+  for(let d=1;d<=n;d++){const any=m.sub[d];
    h+=`<button data-a="day" data-v="${d}" class="${d===day?'sel':''} ${isNow()&&d===now.getDate()?'today':''}">${d}${any?'<i></i>':''}</button>`}
   h+='</div>';let dn=0,cnt=0;
-  let rows='';S.habits.forEach((x,i)=>{if(!x.trim())return;cnt++;const v=(m.marks[i]||{})[day];if(v==1)dn++;
-   rows+=`<div class="hb"><span>${esc(x)}</span><button class="y ${v==1?'on':''}" data-a="mark" data-h="${i}" data-v="1">✔</button><button class="n ${v==2?'on':''}" data-a="mark" data-h="${i}" data-v="2">✘</button></div>`});
-  h+=`<div class="card"><h2>Day ${day} · ${dn}/${cnt} done</h2>${rows||'<p class="muted">Add habits in Setup.</p>'}</div>`;
+  let rows='';S.habits.forEach(hb=>{const x=hb.name;if(!x.trim())return;cnt++;const v=(m.marks[hb.id]||{})[day];if(v==1)dn++;
+   rows+=`<div class="hb"><span>${esc(x)}</span><button class="y ${v==1?'on':''}" data-a="mark" data-h="${hb.id}" data-v="1">✔</button><button class="n ${v==2?'on':''}" data-a="mark" data-h="${hb.id}" data-v="2">✘</button></div>`});
+  h+=`<div class="card"><h2>Day ${day} · ${dn}/${cnt} done</h2>${rows||'<p class="muted">Add habits in Settings.</p>'}</div>`;
   h+=`<div class="card"><h2>😴 Sleep on day ${day}</h2><div class="sleep"><input type="number" inputmode="decimal" step="0.5" min="0" max="24" data-i="sleep" value="${m.sleep[day]??''}" placeholder="hours"><span class="muted">hours (target ${S.target})</span></div></div>`;
+  h+=m.sub[day]?`<div class="card" style="border-color:var(--ok)"><h2>✔ Day ${day} submitted</h2><p class="muted">This day is included in your Progress charts.</p><button class="btn" data-a="sub" style="border-color:var(--acc);color:var(--acc)">Edit / undo submit</button></div>`:`<button class="submit" data-a="sub">Submit day ${day} to charts</button><p class="muted" style="text-align:center">Habits left unticked count as missed.</p>`;
  }
  if(tab==='charts'){const s=stats(),p=t=>s.tot?Math.round(t/s.tot*100):0;
-  const sl=Object.values(m.sleep),avg=sl.length?(sl.reduce((a,b)=>a+b,0)/sl.length).toFixed(1):'–';
+  const sl=Object.values(subSleep()),avg=sl.length?(sl.reduce((a,b)=>a+b,0)/sl.length).toFixed(1):'–';
   h+=mnav()+`<div class="card"><h2>Habit completion</h2><div class="pie">${pie(s)}<div class="lg">
-  <div><i style="background:var(--ok)"></i>Done ✔ <b>${p(s.done)}%</b></div><div><i style="background:var(--no)"></i>Missed ✘ <b>${p(s.miss)}%</b></div><div><i style="background:var(--grey)"></i>Not filled yet <b>${p(s.pend)}%</b></div></div></div>
-  <p class="muted" style="text-align:center;margin:8px 0 0">Filled so far: ${p(s.done+s.miss)}% of ${s.tot} boxes</p></div>`;
-  h+=`<div class="card"><h2>Per habit</h2>${s.rows.map(r=>`<div class="bar"><div><span>${esc(r.h)}</span><b>${Math.round(r.d/s.n*100)}%</b></div><div class="t"><div class="f" style="width:${r.d/s.n*100}%"></div></div></div>`).join('')||'<p class="muted">No habits yet.</p>'}</div>`;
+  <div><i style="background:var(--ok)"></i>Done ✔ <b>${p(s.done)}%</b></div><div><i style="background:var(--no)"></i>Missed ✘ <b>${p(s.miss)}%</b></div><div><i style="background:var(--grey)"></i>Not submitted yet <b>${p(s.pend)}%</b></div></div></div>
+  <p class="muted" style="text-align:center;margin:8px 0 0">Days submitted: ${s.sd} of ${s.n}</p></div>`;
+  h+=`<div class="card"><h2>Per habit</h2>${s.rows.map(r=>`<div class="bar"><div><span>${esc(r.h)}</span><b>${Math.round(r.d/(s.sd||1)*100)}%</b></div><div class="t"><div class="f" style="width:${r.d/(s.sd||1)*100}%"></div></div></div>`).join('')||'<p class="muted">No habits yet.</p>'}</div>`;
   h+=`<div class="card"><h2>Sleep schedule (hours)</h2>${line()}<p class="muted">Average: <b>${avg}</b> hrs · ${sl.length} nights logged · dashed line = target ${S.target} hrs</p></div>`;
  }
  if(tab==='setup'){
   h+=`<div class="card"><h2>You</h2><label>Name</label><input type="text" data-i="name" value="${esc(S.name)}" placeholder="Your name"><label>Sleep target (hours)</label><input type="number" inputmode="decimal" step="0.5" data-i="target" value="${S.target}"></div>`;
-  h+=`<div class="card"><h2>Habits (up to 10)</h2>${S.habits.map((x,i)=>`<label>Habit ${i+1}</label><input type="text" data-i="habit" data-h="${i}" value="${esc(x)}" placeholder="(empty = not used)">`).join('')}</div>`;
+  h+=`<div class="card"><h2>Habits (${S.habits.length})</h2>${S.habits.map((x,i)=>`<div class="hrow"><input type="text" data-i="habit" data-h="${i}" value="${esc(x.name)}" placeholder="Habit name"><button class="rm" data-a="rm" data-v="${i}">${armRm===x.id?'Sure?':'🗑'}</button></div>`).join('')}<button class="add" data-a="add">＋ Add habit</button><p class="muted">Removing a habit also deletes its ticks.</p></div>`;
   h+=`<div class="card"><h2>Notes for ${monthTitle()}</h2><label>My monthly goal</label><textarea data-i="note" data-k="goal">${esc(m.notes.goal)}</textarea><label>What I have achieved this month</label><textarea data-i="note" data-k="ach">${esc(m.notes.ach)}</textarea><label>What should I improve</label><textarea data-i="note" data-k="imp">${esc(m.notes.imp)}</textarea></div>`;
   h+=`<div class="card"><p class="muted">Your data is saved on this phone, in this browser.</p><button class="btn" data-a="clr">${armed?'Tap again to confirm — clear '+monthTitle():'Clear this month\'s data'}</button></div>`;
  }
- $('#app').innerHTML=h}
+ $('#app').innerHTML=h+'<div class="foot">Developed by <b>SHAH</b></div>'}
 const $=s=>document.querySelector(s);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
- if(a!=='clr')armed=false;
+ if(a!=='clr')armed=false;if(a!=='rm')armRm=null;
  if(a==='tab'){tab=v;window.scrollTo(0,0)}
  else if(a==='day')day=+v;
  else if(a==='mo'){const[y,m]=ym.split('-').map(Number),d=new Date(y,m-1+ +v,1);ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');day=isNow()?now.getDate():1}
  else if(a==='mark'){const mk=M().marks,i=b.dataset.h;mk[i]=mk[i]||{};if(mk[i][day]==v)delete mk[i][day];else mk[i][day]=+v;save()}
+ else if(a==='sub'){const m=M();if(m.sub[day])delete m.sub[day];else m.sub[day]=true;save()}
+ else if(a==='add'){S.habits.push({id:uid(),name:''});save()}
+ else if(a==='rm'){const x=S.habits[+v];if(armRm===x.id){S.habits.splice(+v,1);Object.values(S.months).forEach(m=>delete m.marks[x.id]);armRm=null;save()}else armRm=x.id}
  else if(a==='clr'){if(!armed){armed=true}else{delete S.months[ym];armed=false;save()}}
  render()});
 document.addEventListener('input',e=>{const t=e.target,k=t.dataset.i;if(!k)return;
  if(k==='name')S.name=t.value;
  else if(k==='target')S.target=parseFloat(t.value)||8;
- else if(k==='habit')S.habits[+t.dataset.h]=t.value;
+ else if(k==='habit')S.habits[+t.dataset.h].name=t.value;
  else if(k==='note')M().notes[t.dataset.k]=t.value;
  else if(k==='sleep'){const v=parseFloat(t.value);if(isNaN(v))delete M().sleep[day];else M().sleep[day]=Math.min(24,Math.max(0,v))}
  save()});
